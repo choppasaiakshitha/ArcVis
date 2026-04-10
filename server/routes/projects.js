@@ -7,6 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
     try {
         const { action, userId } = req.query;
+        console.log(`[Projects API] GET request - action: ${action}, userId: ${userId}`);
 
         if (action === 'list') {
             let userProjects = [];
@@ -20,6 +21,10 @@ router.get('/', async (req, res) => {
             const communityProjects = await Project.find({ isPublic: true })
                 .sort({ sharedAt: -1 })
                 .lean();
+
+            console.log(`[Projects API] User projects count: ${userProjects.length}`);
+            console.log(`[Projects API] Community projects count: ${communityProjects.length}`);
+            console.log(`[Projects API] Community projects:`, communityProjects);
 
             return res.json({ userProjects, communityProjects });
         }
