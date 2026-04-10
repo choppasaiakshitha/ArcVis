@@ -5,8 +5,53 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted  # This tells GitHub to use your local machine
+  test-client:
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: cd client && npm install
+
+    - name: Run TypeScript check
+      run: cd client && npm run typecheck
+
+    - name: Build client
+      run: cd client && npm run build
+
+
+  test-server:
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: cd server && npm install
+
+    - name: Run server tests
+      run: cd server && npm test
+
+    - name: Verify server configuration
+      run: cd server && node --check index.js
+
+
+  build-client:
+    needs: test-client
+    runs-on: self-hosted
     
     steps:
     - name: Checkout code
@@ -23,10 +68,34 @@ jobs:
         docker build -t urk23cs1263/arcvis-client:latest ./client
         docker push urk23cs1263/arcvis-client:latest
 
+
+  build-server:
+    needs: test-server
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
     - name: Build and Push Server
       run: |
         docker build -t urk23cs1263/arcvis-server:latest ./server
         docker push urk23cs1263/arcvis-server:latest
+
+
+  deploy:
+    needs: [build-client, build-server]
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
     - name: Deploy to Kubernetes
       run: |
@@ -35,3 +104,4 @@ jobs:
         kubectl rollout restart deployment/server
         kubectl rollout status deployment/client --timeout=120s
         kubectl rollout status deployment/server --timeout=120s
+
