@@ -5,6 +5,7 @@
     "**/.client/**/*",
     ".react-router/types/**/*"
 , "../components", "../lib"  ],
+  "exclude": ["tests/**/*"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["node", "vite/client"],
