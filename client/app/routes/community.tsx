@@ -17,13 +17,25 @@ export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url);
     const apiUrl = `${url.origin}/api/projects?action=list&userId=`;
 
+    console.log(`[Community Loader] Fetching from: ${apiUrl}`);
+
     try {
         const res = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
-        if (!res.ok) return Response.json({ communityProjects: [] });
+        console.log(`[Community Loader] Response status: ${res.status}`);
+        
+        if (!res.ok) {
+            console.error(`[Community Loader] API error: ${res.status}`);
+            return Response.json({ communityProjects: [] });
+        }
+        
         const data = await res.json();
+        console.log(`[Community Loader] API response:`, data);
+        console.log(`[Community Loader] Community projects count:`, data.communityProjects?.length || 0);
+        
         // Return only community projects (all public ones)
         return Response.json({ communityProjects: data.communityProjects || [] });
-    } catch {
+    } catch (error) {
+        console.error(`[Community Loader] Fetch error:`, error);
         return Response.json({ communityProjects: [] });
     }
 }
@@ -32,6 +44,10 @@ export default function Community() {
     const loaderData = useLoaderData() as { communityProjects: DesignItem[] };
     const communityProjects: DesignItem[] = loaderData?.communityProjects || [];
     const navigate = useNavigate();
+
+    console.log(`[Community Component] Loader data:`, loaderData);
+    console.log(`[Community Component] Community projects:`, communityProjects);
+    console.log(`[Community Component] Projects count:`, communityProjects.length);
 
     return (
         <div className="community-page min-h-screen bg-background relative overflow-x-hidden text-foreground">
