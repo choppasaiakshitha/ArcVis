@@ -13,18 +13,35 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-    // Use the origin from the incoming request so it works in SSR
-    const url = new URL(request.url);
-    const apiUrl = `${url.origin}/api/projects?action=list&userId=`;
+    // In Kubernetes, use the service name directly
+    // In development, fallback to request origin
+    const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+    let apiBaseUrl: string;
+    
+    if (isDevelopment || typeof window !== 'undefined') {
+        // Development: use request origin
+        apiBaseUrl = new URL(request.url).origin;
+    } else {
+        // Kubernetes: use service name (resolvable within cluster)
+        apiBaseUrl = 'http://server-service:5000';
+    }
+    
+    const apiUrl = `${apiBaseUrl}/api/projects?action=list&userId=`;
 
+    console.log(`[Community Loader] Mode: ${isDevelopment ? 'development' : 'kubernetes'}`);
+    console.log(`[Community Loader] API Base URL: ${apiBaseUrl}`);
     console.log(`[Community Loader] Fetching from: ${apiUrl}`);
 
     try {
-        const res = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
+        const res = await fetch(apiUrl, { 
+            headers: { 'Accept': 'application/json' },
+            redirect: 'follow'
+        });
         console.log(`[Community Loader] Response status: ${res.status}`);
         
         if (!res.ok) {
-            console.error(`[Community Loader] API error: ${res.status}`);
+            const errorText = await res.text();
+            console.error(`[Community Loader] API error: ${res.status}, ${errorText}`);
             return Response.json({ communityProjects: [] });
         }
         
