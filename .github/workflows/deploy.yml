@@ -1,0 +1,37 @@
+name: Deploy to Minikube
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted  # This tells GitHub to use your local machine
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and Push Client
+      run: |
+        docker build -t urk23cs1263/arcvis-client:latest ./client
+        docker push urk23cs1263/arcvis-client:latest
+
+    - name: Build and Push Server
+      run: |
+        docker build -t urk23cs1263/arcvis-server:latest ./server
+        docker push urk23cs1263/arcvis-server:latest
+
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f k8s/
+        kubectl rollout restart deployment/client
+        kubectl rollout restart deployment/server
+        kubectl rollout status deployment/client --timeout=120s
+        kubectl rollout status deployment/server --timeout=120s

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: client-config
+data:
+  VITE_PUTER_WORKER_URL: "https://happy-sea-4154.puter.work"
+  PORT: "3000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-config
+data:
+  MONGODB_URI: "mongodb://mongo:27017/arcvis"
+  NODE_ENV: "production"
+  PORT: "5000"
