@@ -764,7 +764,10 @@
         100% { background-position: -200% 0; }
     }
 
-
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
 
     .home {
         @apply min-h-screen bg-background relative overflow-x-hidden text-foreground;
@@ -1534,7 +1537,8 @@
             @apply flex-1 relative bg-surface-highlight overflow-hidden;
 
             .bp-canvas {
-                @apply absolute inset-0 w-full h-full;
+                @apply absolute inset-0 block;
+                display: block;
             }
 
             /* Selection Properties Panel */
@@ -1577,11 +1581,6 @@
 
             .bp-prop-del {
                 @apply w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors border border-red-100;
-            }
-
-            @keyframes slideInRight {
-                from { opacity: 0; transform: translateX(20px); }
-                to { opacity: 1; transform: translateX(0); }
             }
 
             /* Empty state overlay */
